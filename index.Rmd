@@ -27,6 +27,9 @@ knit        : slidify::knit2slides
 
 Checkout app at https://sath-ms.shinyapps.io/PredictApp/
 
+Checkout code at https://github.com/sathms/predictapp
+
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 ```
