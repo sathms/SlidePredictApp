@@ -1,0 +1,86 @@
+---
+title       : Predict App - Using Random forest classifier
+subtitle    : 
+author      : sath_ms
+job         : July 27, 2020
+framework   : io2012        # {io2012, html5slides, shower, dzslides, ...}
+highlighter : highlight.js  # {highlight.js, prettify, highlight}
+hitheme     : tomorrow      # 
+widgets     : []            # {mathjax, quiz, bootstrap}
+mode        : selfcontained # {standalone, draft}
+knit        : slidify::knit2slides
+---
+
+## Welcome to Random forest Classifier Demo
+
+1. Build a shiny app to demonstrate a Random forest Classifier
+2. For this we will use inbuilt mtcars dataset
+3. We want to predict if a car is Manual or Automatic
+4. To build a model user select inputs  
+    Input1: Pick a number for k-fold cross validation; 
+    Input2: Select one or more predictors
+5. The app splits the data 70:30 for training and validation
+6. The training data is fed through a model built using Random Forest Classifier
+7. The validation data is then run through the trained model
+8. The model is then evaluated for its accuracy vs ground truth
+9. User can try different predictors and see if results change
+
+Checkout app at https://sath-ms.shinyapps.io/PredictApp/
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+```
+
+---
+
+## Data Preprocessing
+
+```{r dataprep }
+library(shiny)
+library(ggplot2)
+library(caret)
+library(lattice)
+library(randomForest)
+library(e1071)
+
+data(mtcars)
+mdata <- mtcars
+mdata$am <- factor(mdata$am, labels = c("Automatic", "Manual"))
+set.seed(7826)
+inTrain <- createDataPartition(mdata$am, p = 0.7, list = FALSE)
+train <- mdata[inTrain, ]
+valid <- mdata[-inTrain, ]
+```
+
+---
+
+# Get User Inputs, build a classifier model with random forest classifier
+
+```{r userinput}
+kfold <-  5     #  User can select: 2, 5 or 10
+# User can select one or more predictors from the following list
+predictors <- c("mpg","cyl","disp","hp","drat","wt","qsec","vs","gear","carb")
+kfold
+predictors
+```
+
+```{r}
+control <- trainControl(method = "cv", number = kfold)
+formulaText <-paste("am ~", paste(predictors, collapse = " + "), collapse = " ")
+model <- train(as.formula(formulaText),
+               data = train,
+               method = "rf",
+               trControl = control)
+model
+```
+
+---
+
+# Run the model with validation dataset. Review the model output vs ground truth.
+
+```{r}
+predict_rf <- predict(model, valid)
+conf_rf <- confusionMatrix(valid$am, predict_rf)
+as.data.frame.table(conf_rf$table)
+conf_rf$overall
+```

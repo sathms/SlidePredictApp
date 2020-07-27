@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Predict App - Using Random forest classifier</title>
+  <meta charset="utf-8">
+  <meta name="description" content="Predict App - Using Random forest classifier">
+  <meta name="author" content="sath_ms">
+  <meta name="generator" content="slidify" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/default.css" media="all" >
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/phone.css" 
+    media="only screen and (max-device-width: 480px)" >
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/slidify.css" >
+  <link rel="stylesheet" href="libraries/highlighters/highlight.js/css/tomorrow.css" />
+  <base target="_blank"> <!-- This amazingness opens all links in a new tab. -->  <link rel=stylesheet href="./assets/css/ribbons.css"></link>
+
+  
+  <!-- Grab CDN jQuery, fall back to local if offline -->
+  <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.7.min.js"></script>
+  <script>window.jQuery || document.write('<script src="libraries/widgets/quiz/js/jquery.js"><\/script>')</script> 
+  <script data-main="libraries/frameworks/io2012/js/slides" 
+    src="libraries/frameworks/io2012/js/require-1.0.8.min.js">
+  </script>
+  
+  
+
+</head>
+<body style="opacity: 0">
+  <slides class="layout-widescreen">
+    
+    <!-- LOGO SLIDE -->
+        <slide class="title-slide segue nobackground">
+  
+  <hgroup class="auto-fadein">
+    <h1>Predict App - Using Random forest classifier</h1>
+    <h2></h2>
+    <p>sath_ms<br/>July 27, 2020</p>
+  </hgroup>
+  
+  <article></article>  
+  
+</slide>
+    
+
+    <!-- SLIDES -->
+    <slide class="" id="slide-1" style="background:;">
+  
+  <hgroup>
+    <h2>Welcome to Random forest Classifier Demo</h2>
+  </hgroup>
+  
+  <article data-timings="">
+    <ol>
+<li>Build a shiny app to demonstrate a Random forest Classifier</li>
+<li>For this we will use inbuilt mtcars dataset</li>
+<li>We want to predict if a car is Manual or Automatic</li>
+<li>To build a model user select inputs<br>
+Input1: Pick a number for k-fold cross validation; 
+Input2: Select one or more predictors</li>
+<li>The app splits the data 70:30 for training and validation</li>
+<li>The training data is fed through a model built using Random Forest Classifier</li>
+<li>The validation data is then run through the trained model</li>
+<li>The model is then evaluated for its accuracy vs ground truth</li>
+<li>User can try different predictors and see if results change</li>
+</ol>
+
+<p>Checkout app at <a href="https://sath-ms.shinyapps.io/PredictApp/">https://sath-ms.shinyapps.io/PredictApp/</a></p>
+
+  </article>
+  <!-- Presenter Notes -->
+  
+</slide>
+
+<slide class="" id="slide-2" style="background:;">
+  
+  <hgroup>
+    <h2>Data Preprocessing</h2>
+  </hgroup>
+  
+  <article data-timings="">
+    <pre><code class="r">library(shiny)
+library(ggplot2)
+library(caret)
+library(lattice)
+library(randomForest)
+library(e1071)
+
+data(mtcars)
+mdata &lt;- mtcars
+mdata$am &lt;- factor(mdata$am, labels = c(&quot;Automatic&quot;, &quot;Manual&quot;))
+set.seed(7826)
+inTrain &lt;- createDataPartition(mdata$am, p = 0.7, list = FALSE)
+train &lt;- mdata[inTrain, ]
+valid &lt;- mdata[-inTrain, ]
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+  
+</slide>
+
+<slide class="" id="slide-3" style="background:;">
+  
+  <hgroup>
+    <h1>Get User Inputs, build a classifier model with random forest classifier</h1>
+  </hgroup>
+  
+  <article data-timings="">
+    <pre><code class="r">kfold &lt;-  5     #  User can select: 2, 5 or 10
+# User can select one or more predictors from the following list
+predictors &lt;- c(&quot;mpg&quot;,&quot;cyl&quot;,&quot;disp&quot;,&quot;hp&quot;,&quot;drat&quot;,&quot;wt&quot;,&quot;qsec&quot;,&quot;vs&quot;,&quot;gear&quot;,&quot;carb&quot;)
+kfold
+</code></pre>
+
+<pre><code>## [1] 5
+</code></pre>
+
+<pre><code class="r">predictors
+</code></pre>
+
+<pre><code>##  [1] &quot;mpg&quot;  &quot;cyl&quot;  &quot;disp&quot; &quot;hp&quot;   &quot;drat&quot; &quot;wt&quot;   &quot;qsec&quot; &quot;vs&quot;   &quot;gear&quot; &quot;carb&quot;
+</code></pre>
+
+<pre><code class="r">control &lt;- trainControl(method = &quot;cv&quot;, number = kfold)
+formulaText &lt;-paste(&quot;am ~&quot;, paste(predictors, collapse = &quot; + &quot;), collapse = &quot; &quot;)
+model &lt;- train(as.formula(formulaText),
+               data = train,
+               method = &quot;rf&quot;,
+               trControl = control)
+model
+</code></pre>
+
+<pre><code>## Random Forest 
+## 
+## 24 samples
+## 10 predictors
+##  2 classes: &#39;Automatic&#39;, &#39;Manual&#39; 
+## 
+## No pre-processing
+## Resampling: Cross-Validated (5 fold) 
+## Summary of sample sizes: 19, 19, 19, 20, 19 
+## Resampling results across tuning parameters:
+## 
+##   mtry  Accuracy  Kappa    
+##    2    0.84      0.6904762
+##    6    0.88      0.7662338
+##   10    0.92      0.8321678
+## 
+## Accuracy was used to select the optimal model using the largest value.
+## The final value used for the model was mtry = 10.
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+  
+</slide>
+
+<slide class="" id="slide-4" style="background:;">
+  
+  <hgroup>
+    <h1>Run the model with validation dataset. Review the model output vs ground truth.</h1>
+  </hgroup>
+  
+  <article data-timings="">
+    <pre><code class="r">predict_rf &lt;- predict(model, valid)
+conf_rf &lt;- confusionMatrix(valid$am, predict_rf)
+as.data.frame.table(conf_rf$table)
+</code></pre>
+
+<pre><code>##   Prediction Reference Freq
+## 1  Automatic Automatic    4
+## 2     Manual Automatic    0
+## 3  Automatic    Manual    1
+## 4     Manual    Manual    3
+</code></pre>
+
+<pre><code class="r">conf_rf$overall
+</code></pre>
+
+<pre><code>##       Accuracy          Kappa  AccuracyLower  AccuracyUpper   AccuracyNull 
+##     0.87500000     0.75000000     0.47349033     0.99684028     0.50000000 
+## AccuracyPValue  McnemarPValue 
+##     0.03515625     1.00000000
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+  
+</slide>
+
+    <slide class="backdrop"></slide>
+  </slides>
+  <div class="pagination pagination-small" id='io2012-ptoc' style="display:none;">
+    <ul>
+      
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=1 title='Welcome to Random forest Classifier Demo'>
+         1
+      </a>
+    </li>
+    
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=2 title='Data Preprocessing'>
+         2
+      </a>
+    </li>
+    
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=3 title='Get User Inputs, build a classifier model with random forest classifier'>
+         3
+      </a>
+    </li>
+    
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=4 title='Run the model with validation dataset. Review the model output vs ground truth.'>
+         4
+      </a>
+    </li>
+    
+    </ul>
+  </div>  <!--[if IE]>
+    <script 
+      src="http://ajax.googleapis.com/ajax/libs/chrome-frame/1/CFInstall.min.js">  
+    </script>
+    <script>CFInstall.check({mode: 'overlay'});</script>
+  <![endif]-->
+</body>
+  <!-- Load Javascripts for Widgets -->
+  
+  <!-- LOAD HIGHLIGHTER JS FILES -->
+  <script src="libraries/highlighters/highlight.js/highlight.pack.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+  <!-- DONE LOADING HIGHLIGHTER JS FILES -->
+   
+  </html>
